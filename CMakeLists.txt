@@ -15,6 +15,7 @@ option( BUILD_PYTHON "Build Python bindings" ON )
 option( BUILD_JAVA "Build Java bindings" ON )
 #set it to OFF by default while it is not fully tested and thus officially supported
 option( BUILD_RUBY "Build Ruby bindings" OFF )
+option( BUILD_LUA "Build Lua bindings" OFF)
 
 if ( CGAL_FOUND )
   include( ${CGAL_USE_FILE} )
@@ -43,6 +44,14 @@ if ( CGAL_FOUND )
     SET(CMAKE_SWIG_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}")
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+    if (${BUILD_LUA})
+      FIND_PACKAGE(Lua51)
+      if (NOT LUA51_FOUND)
+        message(WARNING "Lua has not been found, CGAL-bindings for Lua will not be generated.")
+      endif()
+    else()
+      message(STATUS "BUILD_LUA is set to OFF: no CGAL-bindings for Lua will be generated.")
+    endif()
     if (${BUILD_RUBY})
       FIND_PACKAGE(Ruby)
       if (NOT RUBY_FOUND)  
@@ -67,9 +76,15 @@ if ( CGAL_FOUND )
     else()  
       message(STATUS "BUILD_JAVA is set to OFF: no CGAL-bindings for Java will be generated.")
     endif()
-    
+
     SET (COMMON_LIBRARIES_PATH "${CMAKE_CURRENT_BINARY_DIR}/lib" CACHE PATH "Path where libraries common to all target languages are created.")
-    
+
+    if (LUA51_FOUND)
+      SET (LUA_OUTDIR_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/build-lua" CACHE PATH "LUA specific files output directory prefix: the CGAL directory will contain Lua generated files and libraries.")
+      LINK_DIRECTORIES("${LUA_OUTDIR_PREFIX}/CGAL")
+      MESSAGE(STATUS "Found Lua libs.")
+      MESSAGE(STATUS "CGAL-SWIG Lua files and libraries will be written in ${LUA_OUTDIR_PREFIX}/CGAL.")
+    endif()
     if (RUBY_FOUND)
       SET (RUBY_OUTDIR_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/build-ruby" CACHE PATH "RUBY specific files output directory prefix: the CGAL directory will contain Ruby generated files and libraries.")
       
